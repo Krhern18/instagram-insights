@@ -37,6 +37,9 @@ func (h *handler) Followers(opts *instagram.Options) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
+	if files == nil {
+		_ = h.followData.hydrateFollowers([]byte("[]"))
+	}
 	for i := range files {
 		data, err := h.fileSystem.ReadFile(files[i])
 		if err != nil {
@@ -93,7 +96,6 @@ func newUserList(users []user, showTimestamp bool) *userList {
 		users:         users,
 		showTimestamp: showTimestamp,
 	}
-
 }
 
 func (fd *followData) hydrateFollowers(data []byte) error {
@@ -111,6 +113,10 @@ func (fd *followData) hydrateFollowers(data []byte) error {
 				Time: time.Unix(int64(ud.Timestamp), 0),
 			},
 		})
+	}
+	if fd.Followers != nil {
+		fd.Followers.users = append(fd.Followers.users, users...)
+		return nil
 	}
 	fd.Followers = newUserList(users, true)
 	return nil
